@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+
+    Copyright (C) 2011 Cloud Conscious, LLC. <info@cloudconscious.com>
+
+    ====================================================================
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+    ====================================================================
+
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.jclouds.examples</groupId>
+    <artifactId>blobstore-commons-vfs</artifactId>
+    <version>1.1.1</version>
+    <name>blobstore-commons-vfs</name>
+    <properties>
+        <test.blobstore.uri>blobstore://${jclouds.aws.accesskeyid}:${jclouds.aws.secretaccesskey}@s3/jclouds-getpath</test.blobstore.uri>
+        <jclouds.test.listener></jclouds.test.listener>
+    </properties>
+
+
+    <repositories>
+        <repository>
+            <id>jboss-public-releases</id>
+            <url>https://repository.jboss.org/nexus/content/groups/public-jboss</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-vfs2</artifactId>
+            <version>2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jclouds</groupId>
+            <artifactId>jclouds-blobstore</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jclouds</groupId>
+            <artifactId>jclouds-allblobstore</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+		<dependency>
+			<groupId>org.jclouds.driver</groupId>
+			<artifactId>jclouds-netty</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jclouds.driver</groupId>
+			<artifactId>jclouds-apachehc</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jclouds.driver</groupId>
+			<artifactId>jclouds-log4j</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jclouds.driver</groupId>
+			<artifactId>jclouds-slf4j</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.4.3</version>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>test.basedir</name>
+                            <value>target/test-data</value>
+                        </property>
+                        <property>
+                            <name>test.basedir.res</name>
+                            <value>target/test-data</value>
+                        </property>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.jclouds.vfs.tools.blobstore.BlobStoreShell</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <archive>
+                                <manifest>
+                                    <mainClass>org.jclouds.vfs.tools.blobstore.BlobStoreShell</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>live</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemProperties>
+                                <property>
+                                    <name>test.basedir</name>
+                                    <value>target/test-data</value>
+                                </property>
+                                <property>
+                                    <name>test.blobstore.uri</name>
+                                    <value>${test.blobstore.uri}</value>
+                                </property>
+                            </systemProperties>
+                            <includes>
+                                <include>**/*TestCase.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>none</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+
+
+</project>
