@@ -1,0 +1,42 @@
+-------------------------------------------------------------------------------
+Test set: org.jclouds.vfs.provider.blobstore.test.BlobStoreProviderTestCase
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.394 sec <<< FAILURE!
+junit.framework.TestSuite@49938039(org.jclouds.vfs.provider.blobstore.test.BlobStoreProviderTestSuite)  Time elapsed: 0 sec  <<< ERROR!
+java.lang.IllegalArgumentException: The specified provider "blobstore://stub/stub/" is either not configured or supported. Currently configured providers are:
+  [synaptic-storage, cloudonestorage, eucalyptus-partnercloud-s3, cloudfiles-us, swift, transient, aws-s3, cloudfiles-uk, walrus, atmos, filesystem, azureblob, ninefold-storage]
+Check this list, as the provider name may have changed. If you are sure that provider name is correct, check that your project has a dependency on org.jclouds.provider/blobstore://stub/stub/, or on org.jclouds/jclouds-all.
+	at org.jclouds.rest.RestContextFactory.createContextSpec(RestContextFactory.java:309)
+	at org.jclouds.rest.RestContextFactory.createContextBuilder(RestContextFactory.java:233)
+	at org.jclouds.rest.RestContextFactory.createContextBuilder(RestContextFactory.java:212)
+	at org.jclouds.blobstore.BlobStoreContextFactory.createContext(BlobStoreContextFactory.java:109)
+	at org.jclouds.vfs.provider.blobstore.BlobStoreFileProvider.doCreateFileSystem(BlobStoreFileProvider.java:84)
+	at org.apache.commons.vfs2.provider.AbstractOriginatingFileProvider.getFileSystem(AbstractOriginatingFileProvider.java:103)
+	at org.apache.commons.vfs2.provider.AbstractOriginatingFileProvider.findFile(AbstractOriginatingFileProvider.java:81)
+	at org.apache.commons.vfs2.provider.AbstractOriginatingFileProvider.findFile(AbstractOriginatingFileProvider.java:65)
+	at org.apache.commons.vfs2.impl.DefaultFileSystemManager.resolveFile(DefaultFileSystemManager.java:693)
+	at org.apache.commons.vfs2.impl.DefaultFileSystemManager.resolveFile(DefaultFileSystemManager.java:649)
+	at org.apache.commons.vfs2.impl.DefaultFileSystemManager.resolveFile(DefaultFileSystemManager.java:605)
+	at org.jclouds.vfs.provider.blobstore.test.BlobStoreProviderTestCase.setUpTests(BlobStoreProviderTestCase.java:71)
+	at org.jclouds.vfs.provider.blobstore.test.BlobStoreProviderTestCase.getBaseTestFolder(BlobStoreProviderTestCase.java:66)
+	at org.apache.commons.vfs2.test.AbstractTestSuite.setUp(AbstractTestSuite.java:169)
+	at junit.extensions.TestSetup$1.protect(TestSetup.java:22)
+	at junit.framework.TestResult.runProtected(TestResult.java:128)
+	at junit.extensions.TestSetup.run(TestSetup.java:27)
+	at org.junit.internal.runners.JUnit38ClassRunner.run(JUnit38ClassRunner.java:83)
+	at org.apache.maven.surefire.junit4.JUnit4TestSet.execute(JUnit4TestSet.java:62)
+	at org.apache.maven.surefire.suite.AbstractDirectoryTestSuite.executeTestSet(AbstractDirectoryTestSuite.java:140)
+	at org.apache.maven.surefire.suite.AbstractDirectoryTestSuite.execute(AbstractDirectoryTestSuite.java:127)
+	at org.apache.maven.surefire.Surefire.run(Surefire.java:177)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.apache.maven.surefire.booter.SurefireBooter.runSuitesInProcess(SurefireBooter.java:345)
+	at org.apache.maven.surefire.booter.SurefireBooter.main(SurefireBooter.java:1009)
+Caused by: java.lang.IllegalArgumentException: please configure contextbuilder class for blobstore://stub/stub/
+	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:88)
+	at org.jclouds.rest.Providers.resolveContextBuilderClass(Providers.java:119)
+	at org.jclouds.rest.RestContextFactory.createContextSpec(RestContextFactory.java:304)
+	... 27 more
+

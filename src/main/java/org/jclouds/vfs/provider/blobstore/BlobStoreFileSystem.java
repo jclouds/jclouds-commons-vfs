@@ -23,11 +23,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 
-import org.apache.commons.vfs.FileName;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.FileSystemOptions;
-import org.apache.commons.vfs.provider.AbstractFileSystem;
+import org.apache.commons.vfs2.FileName;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.FileSystemOptions;
+import org.apache.commons.vfs2.provider.AbstractFileName;
+import org.apache.commons.vfs2.provider.AbstractFileSystem;
 import org.jclouds.blobstore.BlobStoreContext;
 
 /**
@@ -53,4 +54,9 @@ public class BlobStoreFileSystem extends AbstractFileSystem {
    protected FileObject createFile(FileName fileName) throws Exception {
       return new BlobStoreFileObject(fileName, this, context, container);
    }
+
+    @Override
+    protected FileObject createFile(AbstractFileName abstractFileName) throws Exception {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

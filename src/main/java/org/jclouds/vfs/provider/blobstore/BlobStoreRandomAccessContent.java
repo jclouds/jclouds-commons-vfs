@@ -18,15 +18,15 @@
  */
 package org.jclouds.vfs.provider.blobstore;
 
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.provider.AbstractRandomAccessStreamContent;
+import org.apache.commons.vfs2.util.RandomAccessMode;
+import org.jclouds.blobstore.options.GetOptions;
+
 import java.io.DataInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.provider.AbstractRandomAccessStreamContent;
-import org.apache.commons.vfs.util.RandomAccessMode;
-import org.jclouds.blobstore.options.GetOptions;
 
 /**
  * @author Adrian Cole
@@ -70,7 +70,7 @@ public class BlobStoreRandomAccessContent extends AbstractRandomAccessStreamCont
 
       dis = new DataInputStream(new FilterInputStream((InputStream) fileObject.getBlobStore()
                .getBlob(fileObject.getContainer(), fileObject.getNameTrimLeadingSlashes(),
-                        new GetOptions().startAt(filePointer)).getContent()) {
+                        new GetOptions().startAt(filePointer))) {
          public int read() throws IOException {
             int ret = super.read();
             if (ret > -1) {

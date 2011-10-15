@@ -18,10 +18,38 @@
  */
 package org.jclouds.vfs.provider.blobstore;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static org.jclouds.util.Patterns.LEADING_SLASHES;
-import static org.jclouds.util.Patterns.TRAILING_SLASHES;
+import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import org.apache.commons.vfs2.FileName;
+import org.apache.commons.vfs2.FileNotFolderException;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.FileType;
+import org.apache.commons.vfs2.FileTypeHasNoContentException;
+import org.apache.commons.vfs2.NameScope;
+import org.apache.commons.vfs2.RandomAccessContent;
+import org.apache.commons.vfs2.provider.AbstractFileName;
+import org.apache.commons.vfs2.provider.AbstractFileObject;
+import org.apache.commons.vfs2.util.FileObjectUtils;
+import org.apache.commons.vfs2.util.MonitorOutputStream;
+import org.apache.commons.vfs2.util.RandomAccessMode;
+import org.apache.log4j.Logger;
+import org.jclouds.blobstore.BlobStore;
+import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.ContainerNotFoundException;
+import org.jclouds.blobstore.KeyNotFoundException;
+import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.blobstore.domain.StorageMetadata;
+import org.jclouds.blobstore.domain.StorageType;
+import org.jclouds.blobstore.options.ListContainerOptions;
+import org.jclouds.blobstore.strategy.internal.ConcatenateContainerLists;
+import org.jclouds.blobstore.util.BlobStoreUtils;
+import org.jclouds.crypto.CryptoStreams;
+import org.jclouds.io.Payload;
+import org.jclouds.io.Payloads;
+import org.jclouds.util.Utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,35 +63,10 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.commons.vfs.FileName;
-import org.apache.commons.vfs.FileNotFolderException;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.FileType;
-import org.apache.commons.vfs.FileTypeHasNoContentException;
-import org.apache.commons.vfs.NameScope;
-import org.apache.commons.vfs.RandomAccessContent;
-import org.apache.commons.vfs.provider.AbstractFileObject;
-import org.apache.commons.vfs.util.FileObjectUtils;
-import org.apache.commons.vfs.util.MonitorOutputStream;
-import org.apache.commons.vfs.util.RandomAccessMode;
-import org.apache.log4j.Logger;
-import org.jclouds.blobstore.BlobStore;
-import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.ContainerNotFoundException;
-import org.jclouds.blobstore.KeyNotFoundException;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.blobstore.domain.StorageMetadata;
-import org.jclouds.blobstore.domain.StorageType;
-import org.jclouds.blobstore.options.ListContainerOptions;
-import org.jclouds.blobstore.strategy.internal.ConcatenateContainerLists;
-import org.jclouds.blobstore.util.internal.BlobStoreUtilsImpl;
-import org.jclouds.util.Utils;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static org.jclouds.util.Patterns.LEADING_SLASHES;
+import static org.jclouds.util.Patterns.TRAILING_SLASHES;
 
 /**
  * @author Adrian Cole
@@ -78,7 +81,7 @@ public class BlobStoreFileObject extends AbstractFileObject {
 
    public BlobStoreFileObject(FileName fileName, BlobStoreFileSystem fileSystem,
             BlobStoreContext context, String container) throws FileSystemException {
-      super(fileName, fileSystem);
+      super((AbstractFileName) fileName, fileSystem);
       this.context = checkNotNull(context, "context");
       this.container = checkNotNull(container, "container");
       this.lister = checkNotNull(new ConcatenateContainerLists(context.getBlobStore()), "lister");
@@ -102,9 +105,10 @@ public class BlobStoreFileObject extends AbstractFileObject {
       protected void onClose() throws IOException {
          try {
             blob.setPayload(file);
-            blob.generateMD5();
+            final byte[] md5 = CryptoStreams.md5(blob.getPayload());
+            blob.getMetadata().getContentMetadata().setContentMD5(md5);
             logger.info(String.format(">> put: %s/%s %d bytes", getContainer(),
-                     getNameTrimLeadingSlashes(), blob.getContentLength()));
+                     getNameTrimLeadingSlashes(), blob.getMetadata().getContentMetadata().getContentLength()));
             String tag = context.putBlob(getContainer(), blob);
             logger.info(String.format("<< tag %s: %s/%s", tag, getContainer(),
                      getNameTrimLeadingSlashes()));
@@ -120,10 +124,10 @@ public class BlobStoreFileObject extends AbstractFileObject {
 
    @Override
    protected long doGetContentSize() throws Exception {
-      if (metadata == null || metadata.getSize() == null || metadata.getSize() == 0) {
+      if (metadata == null || metadata.getUserMetadata().isEmpty()) {
          getMetadataAtPath(getNameTrimLeadingSlashes());
       }
-      return metadata.getSize() != null ? metadata.getSize() : 0;
+      return !metadata.getUserMetadata().isEmpty() ? metadata.getUserMetadata().size():0;
    }
 
    @Override
@@ -136,7 +140,7 @@ public class BlobStoreFileObject extends AbstractFileObject {
       }
       logger.info(String.format(">> get: %s/%s", getContainer(), getNameTrimLeadingSlashes()));
       Blob blob = getBlobStore().getBlob(getContainer(), getNameTrimLeadingSlashes());
-      return (InputStream) blob.getContent();
+      return (InputStream) blob.getPayload().getRawContent();
    }
 
    String getNameTrimLeadingSlashes() {
@@ -241,7 +245,7 @@ public class BlobStoreFileObject extends AbstractFileObject {
       File file = allocateFile();
       checkState(file != null, "file was null");
       if (metadata != null) {
-         return new BlobStoreOutputStream(file, getBlobStore(), BlobStoreUtilsImpl.newBlob(
+         return new BlobStoreOutputStream(file, getBlobStore(), BlobStoreUtils.newBlob(
                   getBlobStore(), metadata));
       } else {
          return new BlobStoreOutputStream(file, getBlobStore(), getBlobStore().newBlob(
@@ -301,7 +305,7 @@ public class BlobStoreFileObject extends AbstractFileObject {
       try {
          metadata = Iterables.find(lister.execute(getContainer(), options),
                   new Predicate<StorageMetadata>() {
-                     @Override
+
                      public boolean apply(StorageMetadata input) {
                         return input.getType() != StorageType.BLOB && input.getName().equals(name);
                      }

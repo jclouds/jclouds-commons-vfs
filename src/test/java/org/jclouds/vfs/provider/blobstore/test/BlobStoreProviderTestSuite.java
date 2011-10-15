@@ -18,22 +18,22 @@
  */
 package org.jclouds.vfs.provider.blobstore.test;
 
-import org.apache.commons.vfs.test.ContentTests;
-import org.apache.commons.vfs.test.LastModifiedTests;
-import org.apache.commons.vfs.test.NamingTests;
-import org.apache.commons.vfs.test.ProviderCacheStrategyTests;
-import org.apache.commons.vfs.test.ProviderDeleteTests;
-import org.apache.commons.vfs.test.ProviderRandomReadTests;
-import org.apache.commons.vfs.test.ProviderRandomReadWriteTests;
-import org.apache.commons.vfs.test.ProviderReadTests;
-import org.apache.commons.vfs.test.ProviderRenameTests;
-import org.apache.commons.vfs.test.ProviderTestConfig;
-import org.apache.commons.vfs.test.ProviderTestSuite;
-import org.apache.commons.vfs.test.ProviderWriteAppendTests;
-import org.apache.commons.vfs.test.ProviderWriteTests;
-import org.apache.commons.vfs.test.UriTests;
-import org.apache.commons.vfs.test.UrlStructureTests;
-import org.apache.commons.vfs.test.UrlTests;
+import org.apache.commons.vfs2.test.ContentTests;
+import org.apache.commons.vfs2.test.LastModifiedTests;
+import org.apache.commons.vfs2.test.NamingTests;
+import org.apache.commons.vfs2.test.ProviderCacheStrategyTests;
+import org.apache.commons.vfs2.test.ProviderDeleteTests;
+import org.apache.commons.vfs2.test.ProviderRandomReadTests;
+import org.apache.commons.vfs2.test.ProviderRandomReadWriteTests;
+import org.apache.commons.vfs2.test.ProviderReadTests;
+import org.apache.commons.vfs2.test.ProviderRenameTests;
+import org.apache.commons.vfs2.test.ProviderTestConfig;
+import org.apache.commons.vfs2.test.ProviderTestSuite;
+import org.apache.commons.vfs2.test.ProviderWriteAppendTests;
+import org.apache.commons.vfs2.test.ProviderWriteTests;
+import org.apache.commons.vfs2.test.UriTests;
+import org.apache.commons.vfs2.test.UrlStructureTests;
+import org.apache.commons.vfs2.test.UrlTests;
 
 /**
  * @author Adrian Cole

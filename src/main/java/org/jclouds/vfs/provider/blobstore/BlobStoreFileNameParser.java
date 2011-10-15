@@ -18,16 +18,16 @@
  */
 package org.jclouds.vfs.provider.blobstore;
 
-import java.net.URI;
-
-import org.apache.commons.vfs.FileName;
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.FileType;
-import org.apache.commons.vfs.provider.URLFileNameParser;
-import org.apache.commons.vfs.provider.UriParser;
-import org.apache.commons.vfs.provider.VfsComponentContext;
+import org.apache.commons.vfs2.FileName;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.FileType;
+import org.apache.commons.vfs2.provider.URLFileNameParser;
+import org.apache.commons.vfs2.provider.UriParser;
+import org.apache.commons.vfs2.provider.VfsComponentContext;
 import org.jclouds.domain.Credentials;
 import org.jclouds.http.HttpUtils;
+
+import java.net.URI;
 
 /**
  * @author Adrian Cole
@@ -53,7 +53,7 @@ public class BlobStoreFileNameParser extends URLFileNameParser {
 
       Credentials creds = Credentials.parse(uri);
 
-      StringBuffer name = new StringBuffer();
+      StringBuilder name = new StringBuilder();
 
       // Extract the scheme and authority parts
       Authority auth = extractToPath(filename, name);
@@ -73,7 +73,7 @@ public class BlobStoreFileNameParser extends URLFileNameParser {
       FileType fileType = UriParser.normalisePath(name);
       String path = name.toString();
 
-      return new BlobStoreFileName(auth.hostName, creds.account, creds.key, path, fileType,
+      return new BlobStoreFileName(auth.getHostName(), creds.credential, creds.identity, path, fileType,
                container);
    }
 
