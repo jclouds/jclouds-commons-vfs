@@ -22,6 +22,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import org.apache.commons.vfs2.FileName;
 import org.apache.commons.vfs2.FileNotFolderException;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
@@ -74,9 +75,9 @@ public class BlobStoreFileObject extends AbstractFileObject {
    private static final Logger logger = Logger.getLogger(BlobStoreFileObject.class);
    private static final Pattern UNDESCRIBED = Pattern.compile("[^/]*//*");
 
-   public BlobStoreFileObject(AbstractFileName fileName, BlobStoreFileSystem fileSystem,
+   public BlobStoreFileObject(FileName fileName, BlobStoreFileSystem fileSystem,
             BlobStoreContext context, String container) throws FileSystemException {
-      super( fileName, fileSystem);
+      super((AbstractFileName) fileName, fileSystem);
       this.context = checkNotNull(context, "context");
       this.container = checkNotNull(container, "container");
       this.lister = checkNotNull(new ConcatenateContainerLists(context.getBlobStore()), "lister");
