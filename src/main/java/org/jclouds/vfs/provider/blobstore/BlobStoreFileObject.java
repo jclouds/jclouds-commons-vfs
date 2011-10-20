@@ -22,7 +22,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import org.apache.commons.vfs2.FileName;
 import org.apache.commons.vfs2.FileNotFolderException;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
@@ -45,10 +44,6 @@ import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.blobstore.domain.StorageType;
 import org.jclouds.blobstore.options.ListContainerOptions;
 import org.jclouds.blobstore.strategy.internal.ConcatenateContainerLists;
-import org.jclouds.blobstore.util.BlobStoreUtils;
-import org.jclouds.crypto.CryptoStreams;
-import org.jclouds.io.Payload;
-import org.jclouds.io.Payloads;
 import org.jclouds.util.Utils;
 
 import java.io.File;
@@ -79,9 +74,9 @@ public class BlobStoreFileObject extends AbstractFileObject {
    private static final Logger logger = Logger.getLogger(BlobStoreFileObject.class);
    private static final Pattern UNDESCRIBED = Pattern.compile("[^/]*//*");
 
-   public BlobStoreFileObject(FileName fileName, BlobStoreFileSystem fileSystem,
+   public BlobStoreFileObject(AbstractFileName fileName, BlobStoreFileSystem fileSystem,
             BlobStoreContext context, String container) throws FileSystemException {
-      super((AbstractFileName) fileName, fileSystem);
+      super( fileName, fileSystem);
       this.context = checkNotNull(context, "context");
       this.container = checkNotNull(container, "container");
       this.lister = checkNotNull(new ConcatenateContainerLists(context.getBlobStore()), "lister");
@@ -91,22 +86,29 @@ public class BlobStoreFileObject extends AbstractFileObject {
    private class BlobStoreOutputStream extends MonitorOutputStream {
 
       private final BlobStore context;
-      private final Blob blob;
+      private Blob blob;
       private final File file;
+      private final StorageMetadata metadata;
 
-      public BlobStoreOutputStream(File file, BlobStore context, Blob blob)
+      public BlobStoreOutputStream(File file, BlobStore context, StorageMetadata metadata)
                throws FileNotFoundException {
          super(Channels.newOutputStream(new RandomAccessFile(file, "rw").getChannel()));
          this.context = context;
          this.file = file;
-         this.blob = blob;
+         this.metadata = metadata;
       }
 
       protected void onClose() throws IOException {
          try {
-            blob.setPayload(file);
-            final byte[] md5 = CryptoStreams.md5(blob.getPayload());
-            blob.getMetadata().getContentMetadata().setContentMD5(md5);
+            blob = getBlobStore().blobBuilder("close").payload(file).calculateMD5().build();
+            /*TODO: update make change to BlobBuilder so that can pass in storageMetaData instead of mimicking BlobStoreUtils.newBlob()*/
+            if(metadata != null){
+                blob.getMetadata().setETag(metadata.getETag());
+                blob.getMetadata().setId(metadata.getProviderId());
+                blob.getMetadata().setLastModified(metadata.getLastModified());
+                blob.getMetadata().setLocation(metadata.getLocation());
+                blob.getMetadata().setUri(metadata.getUri());
+            }
             logger.info(String.format(">> put: %s/%s %d bytes", getContainer(),
                      getNameTrimLeadingSlashes(), blob.getMetadata().getContentMetadata().getContentLength()));
             String tag = context.putBlob(getContainer(), blob);
@@ -140,7 +142,7 @@ public class BlobStoreFileObject extends AbstractFileObject {
       }
       logger.info(String.format(">> get: %s/%s", getContainer(), getNameTrimLeadingSlashes()));
       Blob blob = getBlobStore().getBlob(getContainer(), getNameTrimLeadingSlashes());
-      return (InputStream) blob.getPayload().getRawContent();
+      return blob.getPayload().getInput();
    }
 
    String getNameTrimLeadingSlashes() {
@@ -244,13 +246,7 @@ public class BlobStoreFileObject extends AbstractFileObject {
    protected OutputStream doGetOutputStream(boolean bAppend) throws Exception {
       File file = allocateFile();
       checkState(file != null, "file was null");
-      if (metadata != null) {
-         return new BlobStoreOutputStream(file, getBlobStore(), BlobStoreUtils.newBlob(
-                  getBlobStore(), metadata));
-      } else {
-         return new BlobStoreOutputStream(file, getBlobStore(), getBlobStore().newBlob(
-                  getNameTrimLeadingSlashes()));
-      }
+      return new BlobStoreOutputStream(file, getBlobStore(),  metadata);
    }
 
    @Override
@@ -278,7 +274,6 @@ public class BlobStoreFileObject extends AbstractFileObject {
 
    private void getContainer(String name) {
       metadata = Iterables.find(getBlobStore().list(), new Predicate<StorageMetadata>() {
-         @Override
          public boolean apply(StorageMetadata input) {
             return input.getType() == StorageType.CONTAINER && input.getName().equals(container);
          }
