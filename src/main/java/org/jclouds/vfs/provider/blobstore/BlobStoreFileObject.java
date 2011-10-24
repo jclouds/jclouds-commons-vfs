@@ -41,6 +41,7 @@ import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.ContainerNotFoundException;
 import org.jclouds.blobstore.KeyNotFoundException;
 import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.blobstore.domain.BlobBuilder;
 import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.blobstore.domain.StorageType;
 import org.jclouds.blobstore.options.ListContainerOptions;
@@ -77,7 +78,8 @@ public class BlobStoreFileObject extends AbstractFileObject {
 
    public BlobStoreFileObject(FileName fileName, BlobStoreFileSystem fileSystem,
             BlobStoreContext context, String container) throws FileSystemException {
-      super((AbstractFileName) fileName, fileSystem);
+      /*This cast is in place as currently AbstractFileObject requires a FileName and this can not be altered from this fork    */
+      super(AbstractFileName.class.cast(fileName), fileSystem);
       this.context = checkNotNull(context, "context");
       this.container = checkNotNull(container, "container");
       this.lister = checkNotNull(new ConcatenateContainerLists(context.getBlobStore()), "lister");
@@ -89,19 +91,23 @@ public class BlobStoreFileObject extends AbstractFileObject {
       private final BlobStore context;
       private Blob blob;
       private final File file;
+      private final String name;
+      private BlobBuilder builder;
       private final StorageMetadata metadata;
 
-      public BlobStoreOutputStream(File file, BlobStore context, StorageMetadata metadata)
+      public BlobStoreOutputStream(File file, BlobStore context, StorageMetadata metadata, String BlobBuilderName)
                throws FileNotFoundException {
          super(Channels.newOutputStream(new RandomAccessFile(file, "rw").getChannel()));
          this.context = context;
          this.file = file;
          this.metadata = metadata;
+         this.name = BlobBuilderName;
       }
 
       protected void onClose() throws IOException {
          try {
-            blob = getBlobStore().blobBuilder("close").payload(file).calculateMD5().build();
+            builder = getBlobStore().blobBuilder(checkNotNull(name,"No name specified"));
+            blob = builder.payload(file).calculateMD5().build();
             /*TODO: update make change to BlobBuilder so that can pass in storageMetaData instead of mimicking BlobStoreUtils.newBlob()*/
             if(metadata != null){
                 blob.getMetadata().setETag(metadata.getETag());
@@ -247,7 +253,7 @@ public class BlobStoreFileObject extends AbstractFileObject {
    protected OutputStream doGetOutputStream(boolean bAppend) throws Exception {
       File file = allocateFile();
       checkState(file != null, "file was null");
-      return new BlobStoreOutputStream(file, getBlobStore(),  metadata);
+      return new BlobStoreOutputStream(file, getBlobStore(),  metadata, "outputFiles");
    }
 
    @Override

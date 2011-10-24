@@ -28,7 +28,7 @@
     <version>1.1.1</version>
     <name>blobstore-commons-vfs</name>
     <properties>
-        <test.blobstore.uri>blobstore://${jclouds.aws.accesskeyid}:${jclouds.aws.secretaccesskey}@s3/jclouds-getpath</test.blobstore.uri>
+        <test.blobstore.uri>blobstore://stub/stub</test.blobstore.uri>
         <jclouds.test.listener></jclouds.test.listener>
     </properties>
 

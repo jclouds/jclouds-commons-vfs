@@ -1,10 +1,9 @@
 \#*\#
 .settings/
 .metadata/
-.idea/
-target/
 bin/
 target/
+.idea/
 activemq-data/
 *~
 *.DS_Store
