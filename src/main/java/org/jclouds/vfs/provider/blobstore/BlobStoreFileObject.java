@@ -146,7 +146,7 @@ public class BlobStoreFileObject extends AbstractFileObject {
             logger.info(String.format("<< tag %s: %s/%s", tag, getContainer(),
                      getNameTrimLeadingSlashes()));
          } catch (InterruptedException e) {
-             e.printStackTrace();
+             System.out.println("Error when creating blob and setting blob metadata "+e);
          } finally {
             file.delete();
          }
