@@ -22,6 +22,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Monitor;
 import org.apache.commons.vfs2.FileName;
 import org.apache.commons.vfs2.FileNotFolderException;
 import org.apache.commons.vfs2.FileObject;
@@ -94,33 +95,58 @@ public class BlobStoreFileObject extends AbstractFileObject {
       private final String name;
       private BlobBuilder builder;
       private final StorageMetadata metadata;
+      private final Monitor monitor = new Monitor();
+      private final Monitor.Guard metadataPresent, blobIsEmpty;
 
-      public BlobStoreOutputStream(File file, BlobStore context, StorageMetadata metadata, String BlobBuilderName)
+      public BlobStoreOutputStream(File file, BlobStore context, final StorageMetadata metadata, String BlobBuilderName)
                throws FileNotFoundException {
          super(Channels.newOutputStream(new RandomAccessFile(file, "rw").getChannel()));
          this.context = context;
          this.file = file;
          this.metadata = metadata;
          this.name = BlobBuilderName;
+         this.metadataPresent = new Monitor.Guard(monitor){
+             public boolean isSatisfied(){
+                 return metadata != null;
+             }
+         };
+         this.blobIsEmpty = new Monitor.Guard(monitor) {
+             @Override
+             public boolean isSatisfied() {
+                 return blob == null;
+             }
+         };
       }
 
+      @Override
       protected void onClose() throws IOException {
          try {
             builder = getBlobStore().blobBuilder(checkNotNull(name,"No name specified"));
-            blob = builder.payload(file).calculateMD5().build();
+            monitor.enterWhen(blobIsEmpty);
+            try{
+                blob = builder.payload(file).calculateMD5().build();
+            } finally {
+                monitor.leave();
+            }
             /*TODO: update make change to BlobBuilder so that can pass in storageMetaData instead of mimicking BlobStoreUtils.newBlob()*/
-            if(metadata != null){
+            monitor.enterWhen(metadataPresent);
+            try{
                 blob.getMetadata().setETag(metadata.getETag());
                 blob.getMetadata().setId(metadata.getProviderId());
                 blob.getMetadata().setLastModified(metadata.getLastModified());
                 blob.getMetadata().setLocation(metadata.getLocation());
                 blob.getMetadata().setUri(metadata.getUri());
+
+            } finally{
+                monitor.leave();
             }
             logger.info(String.format(">> put: %s/%s %d bytes", getContainer(),
                      getNameTrimLeadingSlashes(), blob.getMetadata().getContentMetadata().getContentLength()));
             String tag = context.putBlob(getContainer(), blob);
             logger.info(String.format("<< tag %s: %s/%s", tag, getContainer(),
                      getNameTrimLeadingSlashes()));
+         } catch (InterruptedException e) {
+             e.printStackTrace();
          } finally {
             file.delete();
          }
