@@ -23,7 +23,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Monitor;
-import org.apache.commons.vfs2.FileName;
 import org.apache.commons.vfs2.FileNotFolderException;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
@@ -77,10 +76,10 @@ public class BlobStoreFileObject extends AbstractFileObject {
    private static final Logger logger = Logger.getLogger(BlobStoreFileObject.class);
    private static final Pattern UNDESCRIBED = Pattern.compile("[^/]*//*");
 
-   public BlobStoreFileObject(FileName fileName, BlobStoreFileSystem fileSystem,
+   public BlobStoreFileObject(AbstractFileName fileName, BlobStoreFileSystem fileSystem,
             BlobStoreContext context, String container) throws FileSystemException {
       /*This cast is in place as currently AbstractFileObject requires a FileName and this can not be altered from this fork    */
-      super(AbstractFileName.class.cast(fileName), fileSystem);
+      super(fileName, fileSystem);
       this.context = checkNotNull(context, "context");
       this.container = checkNotNull(container, "container");
       this.lister = checkNotNull(new ConcatenateContainerLists(context.getBlobStore()), "lister");
@@ -93,50 +92,31 @@ public class BlobStoreFileObject extends AbstractFileObject {
       private Blob blob;
       private final File file;
       private final String name;
-      private BlobBuilder builder;
       private final StorageMetadata metadata;
       private final Monitor monitor = new Monitor();
-      private final Monitor.Guard metadataPresent, blobIsEmpty;
 
-      public BlobStoreOutputStream(File file, BlobStore context, final StorageMetadata metadata, String BlobBuilderName)
+      public BlobStoreOutputStream(File file, BlobStore context, final StorageMetadata metadata, String blobBuilderName)
                throws FileNotFoundException {
          super(Channels.newOutputStream(new RandomAccessFile(file, "rw").getChannel()));
          this.context = context;
          this.file = file;
          this.metadata = metadata;
-         this.name = BlobBuilderName;
-         this.metadataPresent = new Monitor.Guard(monitor){
-             public boolean isSatisfied(){
-                 return metadata != null;
-             }
-         };
-         this.blobIsEmpty = new Monitor.Guard(monitor) {
-             @Override
-             public boolean isSatisfied() {
-                 return blob == null;
-             }
-         };
+         this.name = checkNotNull(blobBuilderName,"No name specified for BlobBuilder");
       }
 
       @Override
       protected void onClose() throws IOException {
          try {
-            builder = getBlobStore().blobBuilder(checkNotNull(name,"No name specified"));
-            monitor.enterWhen(blobIsEmpty);
-            try{
-                blob = builder.payload(file).calculateMD5().build();
-            } finally {
-                monitor.leave();
-            }
+            monitor.enter();
+            try {
+            BlobBuilder builder = getBlobStore().blobBuilder(checkNotNull(name,"No name specified"));
+            blob = builder.payload(file).calculateMD5().build();
             /*TODO: update make change to BlobBuilder so that can pass in storageMetaData instead of mimicking BlobStoreUtils.newBlob()*/
-            monitor.enterWhen(metadataPresent);
-            try{
-                blob.getMetadata().setETag(metadata.getETag());
-                blob.getMetadata().setId(metadata.getProviderId());
-                blob.getMetadata().setLastModified(metadata.getLastModified());
-                blob.getMetadata().setLocation(metadata.getLocation());
-                blob.getMetadata().setUri(metadata.getUri());
-
+            blob.getMetadata().setETag(metadata.getETag());
+            blob.getMetadata().setId(metadata.getProviderId());
+            blob.getMetadata().setLastModified(metadata.getLastModified());
+            blob.getMetadata().setLocation(metadata.getLocation());
+            blob.getMetadata().setUri(metadata.getUri());
             } finally{
                 monitor.leave();
             }
@@ -145,8 +125,6 @@ public class BlobStoreFileObject extends AbstractFileObject {
             String tag = context.putBlob(getContainer(), blob);
             logger.info(String.format("<< tag %s: %s/%s", tag, getContainer(),
                      getNameTrimLeadingSlashes()));
-         } catch (InterruptedException e) {
-             System.out.println("Error when creating blob and setting blob metadata "+e);
          } finally {
             file.delete();
          }
@@ -279,7 +257,7 @@ public class BlobStoreFileObject extends AbstractFileObject {
    protected OutputStream doGetOutputStream(boolean bAppend) throws Exception {
       File file = allocateFile();
       checkState(file != null, "file was null");
-      return new BlobStoreOutputStream(file, getBlobStore(),  metadata, "outputFiles");
+      return new BlobStoreOutputStream(file, getBlobStore(),  metadata, "output");
    }
 
    @Override
