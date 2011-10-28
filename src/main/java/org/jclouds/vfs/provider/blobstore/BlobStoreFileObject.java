@@ -109,15 +109,15 @@ public class BlobStoreFileObject extends AbstractFileObject {
          try {
             monitor.enter();
             try {
-            BlobBuilder builder = getBlobStore().blobBuilder(checkNotNull(name,"No name specified"));
-            blob = builder.payload(file).calculateMD5().build();
-            /*TODO: update make change to BlobBuilder so that can pass in storageMetaData instead of mimicking BlobStoreUtils.newBlob()*/
-            blob.getMetadata().setETag(metadata.getETag());
-            blob.getMetadata().setId(metadata.getProviderId());
-            blob.getMetadata().setLastModified(metadata.getLastModified());
-            blob.getMetadata().setLocation(metadata.getLocation());
-            blob.getMetadata().setUri(metadata.getUri());
-            } finally{
+                BlobBuilder builder = getBlobStore().blobBuilder(checkNotNull(name,"No name specified"));
+                blob = builder.payload(file).calculateMD5().build();
+                /*TODO: update make change to BlobBuilder so that can pass in storageMetaData instead of mimicking BlobStoreUtils.newBlob()*/
+                blob.getMetadata().setETag(metadata.getETag());
+                blob.getMetadata().setId(metadata.getProviderId());
+                blob.getMetadata().setLastModified(metadata.getLastModified());
+                blob.getMetadata().setLocation(metadata.getLocation());
+                blob.getMetadata().setUri(metadata.getUri());
+            } finally {
                 monitor.leave();
             }
             logger.info(String.format(">> put: %s/%s %d bytes", getContainer(),

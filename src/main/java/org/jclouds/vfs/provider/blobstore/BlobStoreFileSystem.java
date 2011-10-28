@@ -51,12 +51,8 @@ public class BlobStoreFileSystem extends AbstractFileSystem {
       caps.addAll(BlobStoreFileProvider.capabilities);
    }
 
-   protected FileObject createFile(FileName fileName) throws Exception {
+   protected FileObject createFile(AbstractFileName fileName) throws Exception {
       return new BlobStoreFileObject(fileName, this, context, container);
    }
 
-    @Override
-    protected FileObject createFile(AbstractFileName abstractFileName) throws Exception {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 }
