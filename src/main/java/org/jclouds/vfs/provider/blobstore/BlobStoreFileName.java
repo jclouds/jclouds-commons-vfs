@@ -18,9 +18,9 @@
  */
 package org.jclouds.vfs.provider.blobstore;
 
-import org.apache.commons.vfs.FileName;
-import org.apache.commons.vfs.FileType;
-import org.apache.commons.vfs.provider.GenericFileName;
+import org.apache.commons.vfs2.FileName;
+import org.apache.commons.vfs2.provider.GenericFileName;
+import org.apache.commons.vfs2.FileType;
 
 /**
  * 
@@ -47,7 +47,7 @@ public class BlobStoreFileName extends GenericFileName {
    }
 
    @Override
-   protected void appendRootUri(final StringBuffer buffer, boolean addPassword) {
+   protected void appendRootUri(final StringBuilder buffer, boolean addPassword) {
       super.appendRootUri(buffer, addPassword);
       buffer.append('/');
       buffer.append(getContainer());

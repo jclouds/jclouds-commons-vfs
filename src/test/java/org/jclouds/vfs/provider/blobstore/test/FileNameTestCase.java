@@ -19,7 +19,7 @@
 package org.jclouds.vfs.provider.blobstore.test;
 
 import org.apache.commons.AbstractVfsTestCase;
-import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs2.FileSystemException;
 import org.jclouds.vfs.provider.blobstore.BlobStoreFileName;
 import org.jclouds.vfs.provider.blobstore.BlobStoreFileNameParser;
 

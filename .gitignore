@@ -1,0 +1,17 @@
+\#*\#
+.settings/
+.metadata/
+bin/
+target/
+.idea/
+activemq-data/
+*~
+*.DS_Store
+*.class
+*.project
+*.classpath
+*.log
+*.iml
+*.swo
+*.swp
+

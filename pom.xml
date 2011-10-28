@@ -28,7 +28,7 @@
     <version>1.1.1</version>
     <name>blobstore-commons-vfs</name>
     <properties>
-        <test.blobstore.uri>blobstore://${jclouds.aws.accesskeyid}:${jclouds.aws.secretaccesskey}@s3/jclouds-getpath</test.blobstore.uri>
+        <test.blobstore.uri>blobstore://stub/stub</test.blobstore.uri>
         <jclouds.test.listener></jclouds.test.listener>
     </properties>
 
@@ -53,7 +53,11 @@
             <artifactId>commons-vfs2</artifactId>
             <version>2.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+        </dependency>
         <dependency>
             <groupId>org.jclouds</groupId>
             <artifactId>jclouds-blobstore</artifactId>
@@ -84,6 +88,19 @@
 			<artifactId>jclouds-slf4j</artifactId>
 			<version>1.1.1</version>
 		</dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-vfs2</artifactId>
+            <version>2.0</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>10.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>
